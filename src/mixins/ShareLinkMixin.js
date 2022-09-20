@@ -21,6 +21,7 @@
  */
 import { generateUrl } from '@nextcloud/router'
 import { showError, showSuccess } from '@nextcloud/dialogs'
+import logger from '../utils/Logger.js'
 
 export default {
 	methods: {
@@ -34,6 +35,7 @@ export default {
 			const shareLink = window.location.protocol + '//' + window.location.host + generateUrl(`/apps/forms/${formHash}`)
 			this.copyLink(event, shareLink)
 		},
+
 		/**
 		 * Copy share link for public share
 		 *
@@ -58,9 +60,25 @@ export default {
 				showSuccess(t('forms', 'Form link copied'))
 			} catch (error) {
 				showError(t('forms', 'Cannot copy, please copy the link manually'))
+				logger.error('Copy link failed', { error })
 			}
-			// Set back focus as clipboard removes focus
-			event.target.focus()
+		},
+
+		/**
+		 * Copy code to embed public share inside external websites
+		 *
+		 * @param {string} publicHash Hash of public link-share
+		 */
+		 async copyEmbeddingCode(publicHash) {
+			const url = generateUrl(`/apps/forms/embed/${publicHash}`)
+			const code = `<iframe src="${window.location.protocol}//${window.location.host}${url}" width="750" height="900"></iframe>`
+			try {
+				await navigator.clipboard.writeText(code)
+				showSuccess(t('forms', 'Embedding code copied'))
+			} catch (error) {
+				showError(t('forms', 'Cannot copy the code'))
+				logger.error('Copy embedding code failed', { error })
+			}
 		},
 	},
 }
