@@ -42,28 +42,7 @@
 
 			<!-- View switcher between Summary and Responses -->
 			<div class="response-actions">
-				<div class="response-actions__radio">
-					<input id="show-summary--true"
-						v-model="showSummary"
-						type="radio"
-						:value="true"
-						class="hidden">
-					<label for="show-summary--true"
-						class="response-actions__radio__item"
-						:class="{ 'response-actions__radio__item--active': showSummary }">
-						{{ t('forms', 'Summary') }}
-					</label>
-					<input id="show-summary--false"
-						v-model="showSummary"
-						type="radio"
-						:value="false"
-						class="hidden">
-					<label for="show-summary--false"
-						class="response-actions__radio__item"
-						:class="{ 'response-actions__radio__item--active': !showSummary }">
-						{{ t('forms', 'Responses') }}
-					</label>
-				</div>
+				<PillMenu :options="responseViews" :active.sync="activeResponseView" class="response-actions__toggle" />
 
 				<!-- Action menu for CSV export and deletion -->
 				<NcActions class="results-menu"
@@ -110,7 +89,7 @@
 		</section>
 
 		<!-- Summary view for visualization -->
-		<section v-if="!noSubmissions && showSummary">
+		<section v-if="!noSubmissions && activeResponseView.view === 'summary'">
 			<ResultsSummary v-for="question in form.questions"
 				:key="question.id"
 				:question="question"
@@ -118,7 +97,7 @@
 		</section>
 
 		<!-- Responses view for individual responses -->
-		<section v-if="!noSubmissions && !showSummary">
+		<section v-if="!noSubmissions && activeResponseView.view === 'responses'">
 			<Submission v-for="submission in form.submissions"
 				:key="submission.id"
 				:submission="submission"
@@ -134,6 +113,7 @@ import { generateOcsUrl } from '@nextcloud/router'
 import { getRequestToken } from '@nextcloud/auth'
 import { getFilePickerBuilder, showError, showSuccess } from '@nextcloud/dialogs'
 import { emit } from '@nextcloud/event-bus'
+
 import NcActions from '@nextcloud/vue/dist/Components/NcActions.js'
 import NcActionButton from '@nextcloud/vue/dist/Components/NcActionButton.js'
 import NcAppContent from '@nextcloud/vue/dist/Components/NcAppContent.js'
@@ -158,6 +138,7 @@ import logger from '../utils/Logger.js'
 import SetWindowTitle from '../utils/SetWindowTitle.js'
 import OcsResponse2Data from '../utils/OcsResponse2Data.js'
 import PermissionTypes from '../mixins/PermissionTypes.js'
+import PillMenu from '../components/PillMenu.vue'
 
 const picker = getFilePickerBuilder(t('forms', 'Save CSV to Files'))
 	.setMultiSelect(false)
@@ -165,6 +146,17 @@ const picker = getFilePickerBuilder(t('forms', 'Save CSV to Files'))
 	.setType(1)
 	.allowDirectories()
 	.build()
+
+const responseViews = [
+	{
+		title: t('forms', 'Summary'),
+		view: 'summary',
+	},
+	{
+		title: t('forms', 'Responses'),
+		view: 'responses',
+	},
+]
 
 export default {
 	name: 'Results',
@@ -181,6 +173,7 @@ export default {
 		NcButton,
 		NcEmptyContent,
 		NcLoadingIcon,
+		PillMenu,
 		ResultsSummary,
 		Submission,
 		TopBar,
@@ -190,8 +183,9 @@ export default {
 
 	data() {
 		return {
+			activeResponseView: responseViews[0],
 			loadingResults: true,
-			showSummary: true,
+			responseViews,
 		}
 	},
 
@@ -362,34 +356,11 @@ export default {
 	.response-actions {
 		display: flex;
 		align-items: center;
-		padding-left: 14px;
+		margin-top: 8px;
+		padding-left: calc(14px - var(--border-radius-pill));
 
-		&__radio {
-			margin-right: 8px;
-
-			&__item {
-				border-radius: var(--border-radius-pill);
-				padding: 8px 16px;
-				font-weight: bold;
-				background-color: var(--color-background-dark);
-
-				&:first-of-type {
-					border-top-right-radius: 0;
-					border-bottom-right-radius: 0;
-					padding-right: 8px;
-				}
-
-				&:last-of-type {
-					border-top-left-radius: 0;
-					border-bottom-left-radius: 0;
-					padding-left: 8px;
-				}
-
-				&--active {
-					background-color: var(--color-primary);
-					color: var(--color-primary-text)
-				}
-			}
+		&__toggle {
+			margin-right: 1em;
 		}
 	}
 }
