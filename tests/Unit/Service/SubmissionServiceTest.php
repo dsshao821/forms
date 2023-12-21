@@ -128,6 +128,71 @@ class SubmissionServiceTest extends TestCase {
 		);
 	}
 
+	/**
+	 * @dataProvider dataIsUniqueSubmission
+	 */
+	public function testIsUniqueSubmission(array $submissionData, array $otherSubmissionsData, bool $expected) {
+		$this->submissionMapper->method('findByForm')
+			->willReturn(array_map(fn ($data) => Submission::fromParams($data), $otherSubmissionsData));
+
+		$submission = Submission::fromParams($submissionData);
+		$this->assertEquals($expected, $this->submissionService->isUniqueSubmission($submission));
+	}
+
+	public function dataIsUniqueSubmission() {
+		return [
+			[
+				'submissionData' => [
+					'id' => 3,
+					'userId' => 'user',
+					'formId' => 1,
+				],
+				'otherSubmissionData' => [
+					[
+						'id' => 1,
+						'userId' => 'other',
+						'formId' => 1,
+					],
+					[
+						'id' => 2,
+						'userId' => 'yetAnother',
+						'formId' => 1,
+					],
+				],
+				'expected' => true,
+			],
+			[
+				'submissionData' => [
+					'id' => 1,
+					'userId' => 'user',
+					'formId' => 1,
+				],
+				'otherSubmissionData' => [],
+				'expected' => true,
+			],
+			[
+				'submissionData' => [
+					'id' => 3,
+					'userId' => 'user',
+					'formId' => 1,
+				],
+				'otherSubmissionData' => [
+					[
+						'id' => 1,
+						'userId' => 'other',
+						'formId' => 1,
+					],
+					[
+						'id' => 2,
+						'formId' => 1,
+						'userId' => 'user', // conflict
+					],
+				],
+				'expected' => false,
+			],
+		];
+	}
+
 	public function testGetSubmissions() {
 		$submission_1 = new Submission();
 		$submission_1->setId(42);
