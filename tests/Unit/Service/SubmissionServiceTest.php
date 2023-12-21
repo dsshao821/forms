@@ -131,9 +131,10 @@ class SubmissionServiceTest extends TestCase {
 	/**
 	 * @dataProvider dataIsUniqueSubmission
 	 */
-	public function testIsUniqueSubmission(array $submissionData, array $otherSubmissionsData, bool $expected) {
-		$this->submissionMapper->method('findByForm')
-			->willReturn(array_map(fn ($data) => Submission::fromParams($data), $otherSubmissionsData));
+	public function testIsUniqueSubmission(array $submissionData, int $numberOfSubmissions, bool $expected) {
+		$this->submissionMapper->method('countSubmissions')
+			->with($submissionData['formId'], $submissionData['userId'])
+			->willReturn($numberOfSubmissions);
 
 		$submission = Submission::fromParams($submissionData);
 		$this->assertEquals($expected, $this->submissionService->isUniqueSubmission($submission));
@@ -143,31 +144,11 @@ class SubmissionServiceTest extends TestCase {
 		return [
 			[
 				'submissionData' => [
-					'id' => 3,
-					'userId' => 'user',
-					'formId' => 1,
-				],
-				'otherSubmissionData' => [
-					[
-						'id' => 1,
-						'userId' => 'other',
-						'formId' => 1,
-					],
-					[
-						'id' => 2,
-						'userId' => 'yetAnother',
-						'formId' => 1,
-					],
-				],
-				'expected' => true,
-			],
-			[
-				'submissionData' => [
 					'id' => 1,
 					'userId' => 'user',
 					'formId' => 1,
 				],
-				'otherSubmissionData' => [],
+				'numberOfSubmissions' => 1,
 				'expected' => true,
 			],
 			[
@@ -176,18 +157,7 @@ class SubmissionServiceTest extends TestCase {
 					'userId' => 'user',
 					'formId' => 1,
 				],
-				'otherSubmissionData' => [
-					[
-						'id' => 1,
-						'userId' => 'other',
-						'formId' => 1,
-					],
-					[
-						'id' => 2,
-						'formId' => 1,
-						'userId' => 'user', // conflict
-					],
-				],
+				'numberOfSubmissions' => 2,
 				'expected' => false,
 			],
 		];

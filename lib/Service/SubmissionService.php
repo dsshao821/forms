@@ -158,13 +158,7 @@ class SubmissionService {
 	 * Validate the new submission is unique
 	 */
 	public function isUniqueSubmission(Submission $newSubmission): bool {
-		$submissions = $this->submissionMapper->findByForm($newSubmission->getFormId());
-		foreach ($submissions as $submission) {
-			if ($submission->getUserId() === $newSubmission->getUserId() && $submission->getId() !== $newSubmission->getId()) {
-				return false;
-			}
-		}
-		return true;
+		return $this->submissionMapper->countSubmissions($newSubmission->getFormId(), $newSubmission->getUserId()) === 1;
 	}
 
 	/**
