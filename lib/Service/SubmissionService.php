@@ -209,6 +209,7 @@ class SubmissionService {
 		$questions = $this->questionMapper->findByForm($form->getId());
 		$defaultTimeZone = date_default_timezone_get();
 		$userTimezone = $this->config->getUserValue($this->currentUser->getUID(), 'core', 'timezone', $defaultTimeZone);
+		echo $userTimezone;
 
 		// Process initial header
 		$header = [];
